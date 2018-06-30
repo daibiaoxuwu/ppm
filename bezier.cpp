@@ -96,14 +96,15 @@ void curve4(vector<CPoint> &p,
 int main()
 {
 	CPoint point[4];
-	point[0].x=1.0;
-	point[0].y=4.0;
-	point[1].x=9.2;
-	point[1].y=5;
-	point[2].x=6;
-	point[2].y=(9*point[1].y-7)/6;
-	point[3].x=8;
-	point[3].y=9;
+        point[0].x=1.0;
+        point[0].y=4.0;
+        point[1].x=2.2;
+        point[1].y=5;
+        point[2].x=6;
+        point[2].y=3;
+        point[3].x=8;
+        point[3].y=9;
+        point[1].y=(point[0].y*2+point[3].y)/3;
 	vector<CPoint> curvePoint;
 	curve4(curvePoint,
 			point[0].x,point[0].y,

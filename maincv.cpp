@@ -1270,14 +1270,14 @@ public:
     void print(){printf("point %lf %lf\n",x,y);}
 
 }; 
-inline double sol(double x){  
+inline double sol(double x, double a, double b, double c, double d){  
     return a*x*x*x+b*x*x+c*x+d;  
 }  
-double query(double l,double r,bool f){  
+double query(double l,double r,bool f,double a, double b, double c, double d){
     double mid;  
     while(l+0.0001<r){  
         mid=(l+r)/2;  
-        bool b=sol(mid)>0;  
+        bool b=sol(mid,a,b,c,d)>0;  
         if(f?(!b):b)r=mid;  
         else l=mid;  
     }  
@@ -1287,7 +1287,7 @@ class Bezier : public NoLightObj {
 	VDouble3 N;//N位置
     CPoint* point;//四个控制点
     CPoint* kpoint;
-    int tk1;
+    double tk;
 
 public://Plane(): NoLightObj() { }
 	Bezier(VDouble3 N1, double tk1){
@@ -1297,17 +1297,17 @@ public://Plane(): NoLightObj() { }
         kpoint=new CPoint[4];
         point[0].x=1.0;
         point[0].y=4.0;
-        point[1].x=9.2;
+        point[1].x=2.2;
         point[1].y=5;
         point[2].x=6;
-        point[2].y=19.0/3.0;
+        point[2].y=3;
         point[3].x=8;
         point[3].y=9;
+        point[1].y=(point[0].y*2+point[3].y)/3;
         kpoint[3]=point[0]*(-1)+point[1]*3+point[2]*(-3)+point[3];
         kpoint[2]=point[0]*3+point[1]*(-6)+point[2]*3;
         kpoint[1]=point[0]*(-3)+point[1]*3;
         kpoint[0]=point[0];
-        /*
         point[0].print();
         point[1].print();
         point[2].print();
@@ -1317,7 +1317,6 @@ public://Plane(): NoLightObj() { }
         kpoint[2].print();
         kpoint[3].print();
         int temp;scanf("%d",&temp);
-*/
         
 	}
 
@@ -1332,42 +1331,46 @@ public://Plane(): NoLightObj() { }
         {
             double a,b,c,d,x[3];
             a=kpoint[3].x;
-            b=kpoint[2].x-(tk1 * power(ray.dir.x,2) + power(ray.dir.y,2)) * power(kpoint[1].y,2) / power(ray.dir.z,2);
-            c=kpoint[1].x- 2/ray.dir.z*((tk1 * power(ray.dir.x,2) + power(ray.dir.y,2)) * kpoint[1].y * (kpoint[0].y-ray.pos.z) / ray.dir.z + (tk1 * ray.dir.x * ray.pos.x + ray.dir.y * ray.pos.y) * kpoint[1].y);
-            d=kpoint[0].x - (tk1 * power(ray.pos.x,2) + power(ray.pos.y,2) + (tk1 * power(ray.dir.x,2) + power(ray.dir.y,2)) * power((kpoint[0].y - ray.pos.z), 2) / power(ray.dir.z, 2) + (tk1 * ray.dir.x * ray.pos.x + ray.dir.y * ray.pos.y) * (kpoint[0].y - ray.pos.z) / ray.dir.z;
+            b=kpoint[2].x-(tk * pow(ray.dir.x,2) + pow(ray.dir.y,2)) * pow(kpoint[1].y,2) / pow(ray.dir.z,2);
+            c=kpoint[1].x- 2/ray.dir.z*((tk * pow(ray.dir.x,2) + pow(ray.dir.y,2)) * kpoint[1].y * (kpoint[0].y-ray.pos.z) / ray.dir.z + (tk * ray.dir.x * ray.pos.x + ray.dir.y * ray.pos.y) * kpoint[1].y);
+            d=kpoint[0].x - (tk * pow(ray.pos.x,2) + pow(ray.pos.y,2) + (tk * pow(ray.dir.x,2) + pow(ray.dir.y,2)) * pow((kpoint[0].y - ray.pos.z), 2) / pow(ray.dir.z, 2) + (tk * ray.dir.x * ray.pos.x + ray.dir.y * ray.pos.y) * (kpoint[0].y - ray.pos.z) / ray.dir.z);
             a*=1e6;
             b*=1e4;
             c*=1e2;
         if(c==0)c=EPS;
+        int top=105;
         if(a>0){  
             double i;  
-            int top=105;
-            for(i=-1;i<=top&&sol(i)<0;i++);  
-            i+=0.00001;//精度问题 得加这一句 不然判断时可能sol(i)<0==1或==0  
-            x[0]=query(i-1,i,false);
-            for(;i<=top&&sol(i)>=0;i++);  
+            for(i=-1;i<=top&&sol(i,a,b,c,d)<0;i++);  
+            i+=0.00001;//精度问题 得加这一句 不然判断时可能sol(i,a,b,c,d)<0==1或==0  
+            x[0]=query(i-1,i,false,a,b,c,d);
+            for(;i<=top&&sol(i,a,b,c,d)>=0;i++);  
             i+=0.00001;  
-            x[1]=query(i-1,i,true);//down  
-            for(;i<=top&&sol(i)<0;i++);  
+            x[1]=query(i-1,i,true,a,b,c,d);//down  
+            for(;i<=top&&sol(i,a,b,c,d)<0;i++);  
             i+=0.00001;  
-            x[2]=query(i-1,i,false);//up  
+            x[2]=query(i-1,i,false,a,b,c,d);//up  
         }else {  
             double i;  
-            for(i=-1;i<=top&&sol(i)>=0;i++);  
+            for(i=-1;i<=top&&sol(i,a,b,c,d)>=0;i++);  
             i+=0.00001;  
-            x[0]=query(i-1,i,true);//down  
-            for(;i<=top&&sol(i)<0;i++);  
+            x[0]=query(i-1,i,true,a,b,c,d);//down  
+            for(;i<=top&&sol(i,a,b,c,d)<0;i++);  
             i+=0.00001;  
-            x[1]=query(i-1,i,false);//up  
-            for(;i<=top&&sol(i)>=0;i++);  
+            x[1]=query(i-1,i,false,a,b,c,d);//up  
+            for(;i<=top&&sol(i,a,b,c,d)>=0;i++);  
             i+=0.00001;  
-            x[2]=query(i-1,i,true);//down  
+            x[2]=query(i-1,i,true,a,b,c,d);//down  
         }  
         for(int i=0;i<3;i++)
         {
             if(x[i]>=0 && x[i]<=100)
             {
-                double t=(kpoint[3].y*x[i]*x[i]*x[i] + kpoint[2].y*x[i]*x[i] + kpoint[1].y*x[i] + kpoint[0].y) - ray.pos.z)/ray.dir.z;
+                x[i]/=100;
+                double t=((kpoint[3].y*x[i]*x[i]*x[i] + kpoint[2].y*x[i]*x[i] + kpoint[1].y*x[i] + kpoint[0].y) - ray.pos.z)/ray.dir.z;
+                double xt=ray.pos.x + ray.dir.x * t;
+                double yt=ray.pos.y + ray.dir.y * t;
+                double zt=ray.pos.z + ray.dir.z * t;
             }
         }
 
